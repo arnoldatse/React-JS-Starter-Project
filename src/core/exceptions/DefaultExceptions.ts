@@ -1,0 +1,10 @@
+enum DefaultExceptions {
+    UNAUTHORIZED = 'UNAUTHORIZED',
+    FORBIDDEN = 'FORBIDDEN',
+    NOT_FOUND = 'NOT_FOUND',
+    INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
+    UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+    BAD_REQUEST = 'BAD_REQUEST'
+}
+
+export default DefaultExceptions;

@@ -1,0 +1,7 @@
+import InternationalizationAdapter from "core/internationalization/InternationalizationAdapter";
+import I18nInternationalizationAdapter from "details/internationalization/i18n/I18nInternationalizationAdapter";
+
+
+const internationalizationService: InternationalizationAdapter = new I18nInternationalizationAdapter();
+
+export default internationalizationService;
