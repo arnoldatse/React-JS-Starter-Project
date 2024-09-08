@@ -5,6 +5,7 @@ const fr: StringsType = {
   english: "Anglais",
   hello: "Bonjour",
   dashbord:"Tableau de Board",
+  other: "Autre",
   failedGettingUserRole: "Échec de la récupération du rôle de l'utilisateur",
   backToHome: "Retour à l'accueil",
   pageNotFound: "Page non trouvée",
@@ -27,8 +28,14 @@ const fr: StringsType = {
   or: "ou",
   errorOccurred: "Une erreur s'est produite",
   unexpectedOrNetworkError: "Erreur inattendue ou réseau",
-  logout: "Se déconnecter",
+  unauthorizedAction: "Action non autorisée",
+  subscriptionRequired: "Abonnement requis",
+  resourceNotFound: "Ressource non trouvée",
+  invalidInfos: "Informations invalides",
+  conflictEncountered: "Conflit rencontré",
+  unavailableServer: "Serveur non disponible",
   logoutFailed: "Échec de la déconnexion",
+  logout: "Déconnexion",
 };
 
 export default fr;

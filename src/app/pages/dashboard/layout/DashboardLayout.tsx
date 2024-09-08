@@ -9,6 +9,7 @@ import {
   AvailableLanguages,
   languages,
 } from "core/internationalization/languages";
+import Exception from "core/exceptions/Exception";
 
 function DashboardLayout() {
   const { updateAuthDatas, sessionStorageService, logout } = useAuth();
@@ -27,12 +28,10 @@ function DashboardLayout() {
     navigate(`/${path}`);
   };
 
-  const handleLogoutError = () => {
-    alert(translate(StringsKeys.logoutFailed));
-  };
-
   const handleLogout = () => {
-    logout.execute(redirect, handleLogoutError);
+    logout.execute(redirect, translate).catch((e: Exception) => {
+      alert(translate(e.message!));
+    });
   };
 
   return (
@@ -40,7 +39,10 @@ function DashboardLayout() {
       {Object.keys(languages).map((key) => {
         const languageKey: AvailableLanguages = key as AvailableLanguages;
         return (
-          <button key={key} onClick={() => updateLanguage(languages[languageKey])}>
+          <button
+            key={key}
+            onClick={() => updateLanguage(languages[languageKey])}
+          >
             {AvailableLanguages[languageKey].toUpperCase()}
           </button>
         );

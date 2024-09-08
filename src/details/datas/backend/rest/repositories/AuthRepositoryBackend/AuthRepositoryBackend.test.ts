@@ -1,14 +1,16 @@
-import DefaultExceptions from 'core/exceptions/DefaultExceptions';
 import AuthRepositoryBackend from './AuthRepositoryBackend';
 import HttpRequestAdapter from 'core/httpRequest/HttpRequestAdapter';
-import LoginFailedExceptions from 'core/user/auth/exceptions/LoginFailedExceptions';
 import { loginUrl, logoutUrl } from 'details/datas/backend/rest/api/backend_endpoints';
+import Roles from 'core/user/auth/entities/Roles';
 
-jest.mock('details/env/vite/ViteEnvAdapter', () => jest.fn().mockImplementation(() => (
-    {
-        get: jest.fn().mockImplementation(() => 'http://testbackend:8080')
+jest.mock('core/httpRequest/HttpRequestAdapter');
+jest.mock('details/env/vite/ViteEnvAdapter', () => {
+  return jest.fn().mockImplementation(() => {
+    return {
+      get: jest.fn().mockReturnValue('http://localhost:3000')
     }
-)))
+  });
+});
 
 describe('AuthRepositoryBackend', () => {
   let httpRequest: jest.Mocked<HttpRequestAdapter>;
@@ -16,81 +18,76 @@ describe('AuthRepositoryBackend', () => {
 
   beforeEach(() => {
     httpRequest = {
-        get: jest.fn(),
-        post: jest.fn(),
-        patch: jest.fn(),
-        put: jest.fn(),
-        delete: jest.fn(),
+      post: jest.fn(),
+      get: jest.fn(),
+      put: jest.fn(),
+      patch: jest.fn(),
+      delete: jest.fn(),
     }
     authRepository = new AuthRepositoryBackend(httpRequest);
   });
 
   describe('login', () => {
-    it('should return AuthDatas on successful login', async () => {
-      const loginResponse = {
+    it('should login successfully', async () => {
+      const email = 'test@example.com';
+      const password = 'password123';
+      const mockResponse = {
         user: {
           id: '1',
-          name: 'John Doe',
-          email: 'john.doe@example.com',
-          role: 'user',
+          name: 'Test User',
+          email: 'test@example.com',
+          role: Roles.Admin,
         },
-        token: 'fake-token',
+        token: 'token123',
       };
 
-      httpRequest.post.mockResolvedValue(loginResponse);
+      httpRequest.post.mockResolvedValue(mockResponse);
 
-      const result = await authRepository.login('john.doe@example.com', 'password');
+      const result = await authRepository.login(email, password);
 
       expect(httpRequest.post).toHaveBeenCalledWith({
         url: loginUrl(),
-        body: { email: 'john.doe@example.com', password: 'password' },
+        body: { email, password },
       });
       expect(result).toEqual({
         id: '1',
-        username: 'John Doe',
-        role: 'user',
-        token: 'fake-token',
+        username: 'Test User',
+        role: Roles.Admin,
+        token: 'token123',
       });
     });
 
-    it('should throw INVALID_CREDENTIALS on 401 error', async () => {
-      const error = {
-        status: 401,
-        response: { error: 'Invalid credentials' },
-      };
+    it('should handle login failure', async () => {
+      const email = 'test@example.com';
+      const password = 'wrongpassword';
+      const mockError = { error: 'Invalid credentials' };
 
-      httpRequest.post.mockRejectedValue(error);
+      httpRequest.post.mockRejectedValue(mockError);
 
-      await expect(authRepository.login('john.doe@example.com', 'wrong-password')).rejects.toBe(LoginFailedExceptions.INVALID_CREDENTIALS);
-    });
-
-    it('should throw UNKNOWN_ERROR on other errors', async () => {
-      const error = {
-        status: 500,
-        response: { error: 'Server error' },
-      };
-
-      httpRequest.post.mockRejectedValue(error);
-
-      await expect(authRepository.login('john.doe@example.com', 'password')).rejects.toBe(DefaultExceptions.UNKNOWN_ERROR);
+      await expect(authRepository.login(email, password)).rejects.toEqual(mockError);
     });
   });
 
   describe('logout', () => {
-    it('should call the logout endpoint with the token', async () => {
+    it('should logout successfully', async () => {
+      const token = 'token123';
+
       httpRequest.get.mockResolvedValue(undefined);
 
-      await authRepository.logout('fake-token');
+      await authRepository.logout(token);
 
       expect(httpRequest.get).toHaveBeenCalledWith({
-        url: logoutUrl('fake-token'),
+        url: logoutUrl(token),
       });
     });
 
-    it('should throw UNKNOWN_ERROR on logout failure', async () => {
-      httpRequest.get.mockRejectedValue(new Error('Network error'));
+    it('should handle logout failure', async () => {
+      const token = 'token123';
+      const mockError = { error: 'Logout failed' };
 
-      await expect(authRepository.logout('fake-token')).rejects.toBe(DefaultExceptions.UNKNOWN_ERROR);
+      httpRequest.get.mockRejectedValue(mockError);
+
+      await expect(authRepository.logout(token)).rejects.toEqual(mockError);
     });
   });
 });

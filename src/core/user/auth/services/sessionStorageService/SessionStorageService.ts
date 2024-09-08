@@ -1,5 +1,7 @@
 import StoreAuthDatasRepository from "../../repositories/StoreAuthDatasRepository";
 import AuthDatas from "../../entities/AuthDatas";
+import logErrorHandler from "core/error/logErrorHandler";
+import SessionStorageExceptionTypes from "../../exceptions/SessionStorageExceptionTypes";
 
 export default class SessionStorageService {
   private static instance: SessionStorageService;
@@ -10,10 +12,14 @@ export default class SessionStorageService {
     this.initauthDatas();
   }
 
-  public static getInstance(storeAuthDatasRepository: StoreAuthDatasRepository, newInstance = false) {
-    if (!this.instance || newInstance) {
+  public static getInstance(storeAuthDatasRepository?: StoreAuthDatasRepository) {
+    if (storeAuthDatasRepository) {
       SessionStorageService.instance =
         new SessionStorageService(storeAuthDatasRepository);
+    }
+    else if (!storeAuthDatasRepository && !this.instance) {
+      logErrorHandler(new Error("StoreAuthDatasRepository is required to create a new instance"), "SessionStorageService.getInstance");
+      throw { type: SessionStorageExceptionTypes.STORE_AUTH_DATAS_REPOSITORY_REQUIRED };
     }
     return this.instance;
   }
@@ -57,25 +63,27 @@ export default class SessionStorageService {
   }
 
   async save(authDatas: AuthDatas) {
+    this._authDatas = authDatas;
     if (this._persist) {
       try {
         await this.storeAuthDatasRepository.save(authDatas);
       }
       catch (error) {
-        console.error("Failed to save authentication datas", error);
+        logErrorHandler(new Error("Failed to save authentication datas"), "SessionStorageService.save");
+        throw { type: SessionStorageExceptionTypes.FAILED_TO_SAVE_AUTH_DATAS, body: error };
       }
     }
-    this._authDatas = authDatas;
   }
   async remove() {
+    this._authDatas = null;
     if (this._persist) {
       try {
         await this.storeAuthDatasRepository.remove();
       }
       catch (error) {
-        console.error("Failed to remove authentication datas", error);
+        logErrorHandler(new Error("Failed to remove authentication datas"), "SessionStorageService.save");
+        throw { type: SessionStorageExceptionTypes.FAILED_TO_REMOVE_AUTH_DATAS, body: error };
       }
     }
-    this._authDatas = null;
   }
 }

@@ -1,6 +1,6 @@
 import MenuByRoleBuilderService from './MenuByRoleBuilderService';
 import SessionStorageService from '../sessionStorageService/SessionStorageService';
-import { MenuOption, MenuOptionsGroup, MenuSectionTitle, MenuType } from 'core/dashboard/menu/menu';
+import { MenuOption, MenuOptionsGroup, MenuSectionTitle, Menu } from 'core/dashboard/menu/menu';
 import StoreAuthDatasRepository from 'core/user/auth/repositories/StoreAuthDatasRepository';
 import AuthDatas from 'core/user/auth/entities/AuthDatas';
 import Roles from 'core/user/auth/entities/Roles';
@@ -69,7 +69,7 @@ const userMenuOptionsGroup: MenuOptionsGroup = {
     ]
 }
 
-const fakeMenu: MenuType = [
+const fakeMenu: Menu = [
     guestMenuSectionTitle,
     aboutMenuOption,
     guestMenuOptionsGroup,
@@ -78,7 +78,7 @@ const fakeMenu: MenuType = [
     userMenuOptionsGroup
 ]
 
-const responseMenuAlwaysReturned: MenuType = [
+const responseMenuAlwaysReturned: Menu = [
     guestMenuSectionTitle,
     aboutMenuOption,
 ]
@@ -87,7 +87,7 @@ describe('MenuByRoleBuilderService', () => {
     let mockSessionStorageService: SessionStorageService;
 
     beforeEach(() => {
-        mockSessionStorageService = SessionStorageService.getInstance(new MockStoreAuthDatasRepository(), true);
+        mockSessionStorageService = SessionStorageService.getInstance(new MockStoreAuthDatasRepository());
     });
 
     it('should return only without permission menu options if user is not authenticated', () => {

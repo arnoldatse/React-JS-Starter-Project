@@ -1,94 +1,122 @@
 import LoginViewModel from './LoginViewModel';
 import AuthRepository from '../../repositories/AuthRepository';
-import SessionStorageService from '../../services/sessionStorageService/SessionStorageService';
+import LoginUsecase from '../../usecases/LoginUsecase/LoginUsecase'
+import ExceptionService from 'core/exceptions/exceptionService/ExceptionService';
+import DefaultExceptionTypes from 'core/exceptions/DefaultExceptionTypes';
 import routesPaths from 'core/routes/routesPaths';
-import LoginFailedExceptions from '../../exceptions/LoginFailedExceptions';
-import AuthDatas from 'core/user/auth/entities/AuthDatas';
 import { StringsKeys } from 'core/internationalization/strings';
+import Exception from 'core/exceptions/Exception';
 
+jest.mock('../../usecases/LoginUsecase/LoginUsecase');
+jest.mock('core/exceptions/exceptionService/ExceptionService');
+
+jest.useFakeTimers();
 describe('LoginViewModel', () => {
-    let authRepository: AuthRepository;
-    let sessionStorageService: SessionStorageService;
     let loginViewModel: LoginViewModel;
-    let redirectCallBack: jest.Mock;
-    let loginErrorCallBack: jest.Mock;
-    let translateCallBack: jest.Mock;
+    let authRepository: jest.Mocked<AuthRepository>;
+    let navigate: jest.Mock;
+    let translate: jest.Mock;
 
     beforeEach(() => {
         authRepository = {
             login: jest.fn(),
-        } as unknown as AuthRepository;
+            logout: jest.fn(),
+        };
+        navigate = jest.fn();
+        translate = jest.fn();
 
-        sessionStorageService = {
-            setPersist: jest.fn(),
-            setUnpersist: jest.fn(),
-            save: jest.fn(),
-        } as unknown as SessionStorageService;
-
-        loginViewModel = new LoginViewModel(authRepository, sessionStorageService);
-
-        redirectCallBack = jest.fn();
-        loginErrorCallBack = jest.fn();
-        translateCallBack = jest.fn();
+        loginViewModel = new LoginViewModel(authRepository);
     });
 
-    it('should redirect to dashboard on successful login', done => {
-        const authDatas = {} as AuthDatas;
-        (authRepository.login as jest.Mock).mockResolvedValue(authDatas);
-
-        redirectCallBack.mockImplementation((routePath: string) => {
-            expect(authRepository.login).toHaveBeenCalledWith('user', 'password');
-            expect(sessionStorageService.setPersist).toHaveBeenCalled();
-            expect(sessionStorageService.setUnpersist).not.toHaveBeenCalled();
-            expect(sessionStorageService.save).toHaveBeenCalledWith(authDatas);
-            expect(routePath).toBe(routesPaths.DASHBOARD.HOME);
-            done();
-        });
-
-        loginViewModel.submit('user', 'password', true, redirectCallBack, loginErrorCallBack, translateCallBack);
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
-    it('should show bad credentials error on invalid credentials', done => {
-        (authRepository.login as jest.Mock).mockRejectedValue(LoginFailedExceptions.INVALID_CREDENTIALS);
-
-        translateCallBack.mockReturnValue('Bad credentials');
-        loginErrorCallBack.mockImplementation((errorMessage: string) => {
-            expect(translateCallBack).toHaveBeenCalledWith(StringsKeys.badCredentials);
-            expect(authRepository.login).toHaveBeenCalledWith('user', 'password');
-            expect(errorMessage).toBe('Bad credentials');
-            done();
+    describe('get logingIn', () => {
+        it('should get logingIng return true when LoginViewModel just instanciated', () => {
+            expect(loginViewModel.logingIn).toBe(false);
         });
 
-        loginViewModel.submit('user', 'password', true, redirectCallBack, loginErrorCallBack, translateCallBack);
+        it('should get logingIng return true when LoginViewModel is logingIn', () => {
+            const executeMock: jest.Mock<Promise<void>> = (LoginUsecase as jest.Mock<LoginUsecase>).mock.instances[0].execute as jest.Mock<Promise<void>>;
+
+            executeMock.mockImplementation(() => {
+                return new Promise<void>((resolve) => {
+                    setTimeout(() => {
+                        resolve();
+                    }, 1000);
+                });
+            });
+            loginViewModel.submit('email', 'password', true, navigate, translate);
+            expect(loginViewModel.logingIn).toBe(true);
+        });
     });
 
-    it('should show unexpected or network error on other exceptions', done => {
-        (authRepository.login as jest.Mock).mockRejectedValue(new Error('Network error'));
-
-        translateCallBack.mockReturnValue('Unexpected or network error');
-        loginErrorCallBack.mockImplementation((errorMessage: string) => {
-            expect(translateCallBack).toHaveBeenCalledWith(StringsKeys.unexpectedOrNetworkError);
-            expect(authRepository.login).toHaveBeenCalledWith('user', 'password');
-            expect(errorMessage).toBe('Unexpected or network error');
-            done();
+    describe('get logingInException', () => {
+        it('should get logingInException return null when LoginViewModel just instanciated', () => {
+            expect(loginViewModel.failedlogingInException).toBe(null);
         });
 
-        loginViewModel.submit('user', 'password', true, redirectCallBack, loginErrorCallBack, translateCallBack);
+        it('should get logingInException return exception when LoginViewModel has exception', async () => {
+            const exception: Exception = { type: DefaultExceptionTypes.UNAUTHORIZED, message: 'Unauthorized' };
+            const executeMock: jest.Mock<Promise<void>> = (LoginUsecase as jest.Mock<LoginUsecase>).mock.instances[0].execute as jest.Mock<Promise<void>>;
+
+            executeMock.mockRejectedValue(exception);
+            translate.mockImplementation((key: StringsKeys) => key);
+
+            (ExceptionService.handleException as jest.Mock).mockReturnValue(exception);
+
+            try {
+                await loginViewModel.submit('email', 'password', true, navigate, translate);
+            } catch (e) {
+                expect(loginViewModel.failedlogingInException).toBe(exception);
+            }
+        });
     });
 
-    it('should set unpersist if rememberMe is false', done => {
-        const authDatas = {} as AuthDatas;
-        (authRepository.login as jest.Mock).mockResolvedValue(authDatas);
+    describe('submit', () => {
+        const email = 'test@example.com';
+        const password = 'password';
+        const rememberMe = true;
 
-        redirectCallBack.mockImplementation((routePath: string) => {
-            expect(authRepository.login).toHaveBeenCalledWith('user', 'password');
-            expect(sessionStorageService.setUnpersist).toHaveBeenCalled();
-            expect(sessionStorageService.setPersist).not.toHaveBeenCalled();
-            expect(sessionStorageService.save).toHaveBeenCalledWith(authDatas);
-            expect(routePath).toBe(routesPaths.DASHBOARD.HOME);
-            done();
+        it('should reset logingIn and logingInException states before login', async () => {
+            const executeMock: jest.Mock<Promise<void>> = (LoginUsecase as jest.Mock<LoginUsecase>).mock.instances[0].execute as jest.Mock<Promise<void>>;
+            executeMock.mockResolvedValueOnce(undefined);
+
+            await loginViewModel.submit(email, password, rememberMe, navigate, translate);
+
+            expect(loginViewModel.failedlogingInException).toBe(null);
+            expect(loginViewModel.logingIn).toBe(false);
         });
 
-        loginViewModel.submit('user', 'password', false, redirectCallBack, loginErrorCallBack, translateCallBack);
+        it('should navigate to dashboard on successful login', async () => {
+            const executeMock: jest.Mock<Promise<void>> = (LoginUsecase as jest.Mock<LoginUsecase>).mock.instances[0].execute as jest.Mock<Promise<void>>;
+            executeMock.mockResolvedValueOnce(undefined);
+
+            await loginViewModel.submit(email, password, rememberMe, navigate, translate);
+
+            expect(navigate).toHaveBeenCalledWith(routesPaths.DASHBOARD.HOME);
+        });
+
+        it('should handle exception on login failure', async () => {
+            const exception: Exception = { type: DefaultExceptionTypes.UNAUTHORIZED, message: 'Unauthorized' };
+            const executeMock: jest.Mock<Promise<void>> = (LoginUsecase as jest.Mock<LoginUsecase>).mock.instances[0].execute as jest.Mock<Promise<void>>;
+            executeMock.mockRejectedValue(exception);
+
+            (ExceptionService.handleException as jest.Mock).mockReturnValue(exception);
+
+            await expect(loginViewModel.submit(email, password, rememberMe, navigate, translate)).rejects.toBe(exception);
+
+            expect(loginViewModel.failedlogingInException).toBe(exception);
+        });
+
+        it('should reset logingIn state after login attempt', async () => {
+            const executeMock: jest.Mock<Promise<void>> = (LoginUsecase as jest.Mock<LoginUsecase>).mock.instances[0].execute as jest.Mock<Promise<void>>;
+            executeMock.mockResolvedValueOnce(undefined);
+
+            await loginViewModel.submit(email, password, rememberMe, navigate, translate);
+
+            expect(loginViewModel.logingIn).toBe(false);
+        });
     });
 });

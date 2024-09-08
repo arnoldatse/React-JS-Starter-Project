@@ -12,7 +12,7 @@ describe('authGuard', () => {
             get: jest.fn(),
             remove: jest.fn()
         }
-        sessionStorageService = SessionStorageService.getInstance(mockStoreAuthDatasRepository, true);
+        sessionStorageService = SessionStorageService.getInstance(mockStoreAuthDatasRepository);
     });
 
     it('should return true when user is authenticated', () => {

@@ -5,6 +5,7 @@ enum StringsKeys {
     english = "english",
     hello = "hello",
     dashbord = "dashbord",
+    other = "other",
     failedGettingUserRole = "failedGettingUserRole",
     backToHome = "backToHome",
     pageNotFound = "pageNotFound",
@@ -27,8 +28,14 @@ enum StringsKeys {
     or = "or",
     errorOccurred = "errorOccurred",
     unexpectedOrNetworkError = "unexpectedOrNetworkError",
-    logout = "logout",
+    unauthorizedAction = "unauthorizedAction",
+    subscriptionRequired = "subscriptionRequired",
+    resourceNotFound = "resourceNotFound",
+    invalidInfos = "invalidInfos",
+    conflictEncountered = "conflictEncountered",
+    unavailableServer = "unavailableServer",
     logoutFailed = "logoutFailed",
+    logout = "logout",
 }
 
 export default StringsKeys;

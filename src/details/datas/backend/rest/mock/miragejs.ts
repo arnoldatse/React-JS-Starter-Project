@@ -25,6 +25,9 @@ export default createServer({
                     token: "fake-token"
                 };
             }
+            else if (credentials.email === 'adminbad@test.com') {
+                return new Response(500, {}, { message: 'Internal server Error' })
+            }
             return new Response(401, {}, { message: 'Bad credentials' })
         })
     },

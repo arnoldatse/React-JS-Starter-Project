@@ -1,5 +1,6 @@
 import Permissions from "core/user/auth/entities/Permissions"
 import routesPaths from "core/routes/routesPaths"
+import { StringsKeys } from "core/internationalization/strings";
 
 export type MenuSectionTitle = {
     permission?: Permissions;
@@ -27,13 +28,16 @@ export type MenuOption = {
     badgeColor?: 'default' | 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info';
 }
 
-export type MenuType = (MenuOption | MenuOptionsGroup | MenuSectionTitle)[]
+export type Menu = (MenuOption | MenuOptionsGroup | MenuSectionTitle)[]
 
-const menu: MenuType = [
+const menu: Menu = [
     {
-        icon: 'mdi:home-outline',
         path: routesPaths.DASHBOARD.ROOT,
-        title: 'dashbord'
+        title: StringsKeys.dashbord
+    },
+    {
+        path: routesPaths.DASHBOARD.OTHER,
+        title: StringsKeys.other
     }
 ];
 

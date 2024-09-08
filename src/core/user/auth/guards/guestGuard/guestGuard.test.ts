@@ -12,7 +12,7 @@ describe('guestGuard', () => {
             get: jest.fn(),
             remove: jest.fn()
         };
-        sessionStorageService = SessionStorageService.getInstance(mockStoreAuthDatasRepository, true);
+        sessionStorageService = SessionStorageService.getInstance(mockStoreAuthDatasRepository);
     });
 
     it('should return false when user is authenticated', () => {

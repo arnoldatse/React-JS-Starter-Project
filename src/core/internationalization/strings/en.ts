@@ -5,6 +5,7 @@ const en: StringsType = {
   english: "English",
   hello: "Hello",
   dashbord: "Dashbord",
+  other: "Other",
   failedGettingUserRole: "Failed getting user role",
   backToHome: "Back to home",
   pageNotFound: "Page not found",
@@ -27,8 +28,14 @@ const en: StringsType = {
   or: "or",
   errorOccurred: "An error occurred",
   unexpectedOrNetworkError: "Unexpected or network error",
-  logout: "Logout",
+  unauthorizedAction: "Unauthorized action",
+  subscriptionRequired: "Subscription required",
+  resourceNotFound: "Resource not found",
+  invalidInfos: "Invalid infos",
+  conflictEncountered: "Conflict encountered",
+  unavailableServer: "Unavailable server",
   logoutFailed: "Logout failed",
+  logout: "Logout",
 };
 
 export default en;

@@ -1,11 +1,11 @@
-import { MenuOptionsGroup, MenuType } from "core/dashboard/menu/menu";
+import { MenuOptionsGroup, Menu } from "core/dashboard/menu/menu";
 import Permissions from "../../entities/Permissions";
 import getRolePermissions from "../getRolePermissions/getRolePermissions";
 import SessionStorageService from "../sessionStorageService/SessionStorageService";
 
 class MenuByRoleBuilderService {
 
-    constructor(private sessionStorageService: SessionStorageService, private readonly menu: MenuType) { }
+    constructor(private sessionStorageService: SessionStorageService, private readonly menu: Menu) { }
 
     private isAuthorized(permission: Permissions): boolean {
         const role = this.sessionStorageService.authDatas?.role;
@@ -29,7 +29,7 @@ class MenuByRoleBuilderService {
         return menuOptionsGroup;
     }
 
-    buildMenu(): MenuType {
+    buildMenu(): Menu {
         return this.menu
             .filter(menuOption => !menuOption.permission || this.isAuthorized(menuOption.permission))
             .map(menuOption => {
