@@ -1,6 +1,7 @@
 import { isObjectsEquals } from "core/helpers/object/object";
-import HttpRequestAdapter, { HttpRequestParams } from "../HttpRequestAdapter";
+import HttpRequestAdapter, { HttpRequestParams } from "../../../../../../core/httpRequest/HttpRequestAdapter";
 import DefaultExceptionTypes from "core/exceptions/DefaultExceptionTypes";
+import Exception from "core/exceptions/Exception";
 
 export enum HttpMethod {
     GET = 'GET',
@@ -24,11 +25,11 @@ interface RequestSignature<T = void> {
 type OccurentDatasCacheSignature = Record<string, unknown>;
 type DatasCacheSignature = OccurentDatasCacheSignature | OccurentDatasCacheSignature[];
 
-interface Cache<T, B> {
+interface Cache<B> {
     lastFetch: number;
     signature: RequestSignature<B>;
     requestType: RequestType;
-    datas: T | T[];
+    datas: unknown;
 }
 
 type url = string;
@@ -36,10 +37,10 @@ type url = string;
 /**
  * RepositoryCache class handle cache for http requests
  * 
- * @template T type of data to cache
+ * @template O type of request options
  */
-export default class RepositoryCache<T, O = unknown> {
-    private cache: Record<url, Cache<T, unknown>> = {};
+export default class RepositoryCache<O = unknown> {
+    private cache: Record<url, Cache<unknown>> = {};
 
     // Cache validity in seconds
     private _cacheValidity: number;
@@ -64,7 +65,7 @@ export default class RepositoryCache<T, O = unknown> {
 
     }
 
-    private cacheResponse<B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, requestType: RequestType, response: T | T[]) {
+    private cacheResponse<R = unknown, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, requestType: RequestType, response: R) {
         this.cache[httpRequestParams.url] = {
             lastFetch: Date.now(),
             signature: this.createRequestSignature(method, httpRequestParams),
@@ -143,13 +144,14 @@ export default class RepositoryCache<T, O = unknown> {
     /**
      * Find an item in cache according to key and value
      * 
+     * @template T Response type
      * @param key 
      * @param value 
      * @param subPropertyResponseList an array of strings to get from the request list response body the nested sub property where the list is
      * @param subPropertyResponseOccurence an array of strings to get from the request occurence response body the nested sub property where the occurence is
      * @returns 
      */
-    private findInCache(key: string, value: string | number, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]): T | null {
+    private findInCache<T>(key: string, value: string | number, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]): T | null {
         this.removeAllExpiredCache();
 
         let datas: T | null = null;
@@ -188,7 +190,7 @@ export default class RepositoryCache<T, O = unknown> {
      * @param cache 
      * @returns 
      */
-    private isCacheExpired<C>(cache: Cache<C, unknown>) {
+    private isCacheExpired(cache: Cache<unknown>) {
         return Date.now() - cache.lastFetch > this._cacheValidity * 1000;
     }
 
@@ -225,12 +227,14 @@ export default class RepositoryCache<T, O = unknown> {
      * Getting request from cache if available. If not, request paramater are called to make the request
      * it removes all expired cache before checking if cache is available
      * 
+     * @template R Response type
+     * @template B request body type
      * @param httpRequest 
      * @param method 
      * @param httpRequestParams 
      * @returns 
      */
-    private requestWithCache<R extends T | T[], B>(httpRequest: (method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, requestType: RequestType) => Promise<R>, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, requestType: RequestType) {
+    private requestWithCache<R = unknown, B = void>(httpRequest: (method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, requestType: RequestType) => Promise<R>, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, requestType: RequestType) {
         this.removeAllExpiredCache();
         const datas = this.getRequestCache<B>(method, httpRequestParams);
         if (datas) {
@@ -270,7 +274,7 @@ export default class RepositoryCache<T, O = unknown> {
         return request;
     }
 
-    private doCachedHttpRequest<R extends T | T[], E, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, requestType: RequestType) {
+    private doCachedHttpRequest<R = unknown, E = Exception, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, requestType: RequestType) {
         return this.doHttpRequest<R, E, B>(method, httpRequestParams).then((response: R) => {
             this.cacheResponse(method, httpRequestParams, requestType, response);
             return response;
@@ -281,28 +285,36 @@ export default class RepositoryCache<T, O = unknown> {
      * Get list from cache according httpRequestParams parameter to identify specific request cache.
      * If cache is not found or expired, request will be made and cache will be updated with the response of this request.
      * 
+     * @template R Response type
+     * @template E Exception body type
+     * @template B request body type
      * @param method 
      * @param httpRequestParams 
      * @returns 
      */
-    getList<E, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>) {
-        return this.requestWithCache<T[], B>(this.doCachedHttpRequest.bind(this)<T[], E, B>, method, httpRequestParams, RequestType.LIST);
+    getList<R, E = unknown, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>): Promise<R> {
+        return this.requestWithCache<R, B>(this.doCachedHttpRequest.bind(this)<R, Exception<E>, B>, method, httpRequestParams, RequestType.LIST);
     }
 
     /**
      * Get item from cache according httpRequestParams parameter to identify specific request cache.
      * If cache is not found or expired, request will be made and cache will be updated with the response of this request.
      * 
+     * @template R Response type
+     * @template E Exception body type
+     * @template B request body type
      * @param method 
      * @param httpRequestParams 
      * @returns 
      */
-    get<E, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>) {
-        return this.requestWithCache<T, B>(this.doCachedHttpRequest.bind(this)<T, E, B>, method, httpRequestParams, RequestType.OCCURENCE);
+    get<R, E = unknown, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>): Promise<R> {
+        return this.requestWithCache<R, B>(this.doCachedHttpRequest.bind(this)<R, Exception<E>, B>, method, httpRequestParams, RequestType.OCCURENCE);
     }
 
     /**
      * Find an item by key from cache
+     * 
+     * @template T Response type
      * @param key 
      * @param value 
      * @param method 
@@ -311,8 +323,8 @@ export default class RepositoryCache<T, O = unknown> {
      * @param subPropertyResponseOccurence an array of strings to get from the body of occurence type request response the nested sub property where the occurence is
      * @returns 
      */
-    findByKey(key: string, value: string | number, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]) {
-        const datas = this.findInCache(key, value, subPropertyResponseList, subPropertyResponseOccurence);
+    findByKey<T>(key: string, value: string | number, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]): Promise<T> {
+        const datas = this.findInCache<T>(key, value, subPropertyResponseList, subPropertyResponseOccurence);
         if (datas) {
             return Promise.resolve(datas);
         }
@@ -321,6 +333,10 @@ export default class RepositoryCache<T, O = unknown> {
 
     /**
      * Find an item by key from cache or request and cache it
+     * 
+     * @template R Response type
+     * @template E Exception body type
+     * @template B request body type
      * @param key 
      * @param value 
      * @param method 
@@ -329,16 +345,18 @@ export default class RepositoryCache<T, O = unknown> {
      * @param subPropertyResponseOccurence an array of strings to get from the body of occurence type request response the nested sub property where the occurence is
      * @returns 
      */
-    findByKeyOrRequest<E, B = void>(key: string, value: string | number, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]) {
-        const datas = this.findInCache(key, value, subPropertyResponseList, subPropertyResponseOccurence);
-        if (datas) {
-            return Promise.resolve(datas);
-        }
-        return this.get<E, B>(method, httpRequestParams);
+    findByKeyOrRequest<R, E = unknown, B = void>(key: string, value: string | number, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]): Promise<R> {
+        return this.findByKey<R>(key, value, subPropertyResponseList, subPropertyResponseOccurence).catch(() => {
+            return this.get<R, E, B>(method, httpRequestParams);
+        });
     }
 
     /**
      * Find an item by key from cache or request to get all and cache it
+     * 
+     * @template R Response type
+     * @template E Exception body type
+     * @template B request body type
      * @param key 
      * @param value 
      * @param method 
@@ -347,17 +365,17 @@ export default class RepositoryCache<T, O = unknown> {
      * @param subPropertyResponseOccurence an array of strings to get from the body of occurence type request response the nested sub property where the occurence is
      * @returns 
      */
-    findByKeyOrRequestGetAll<E, B = void>(key: string, value: string | number, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]) {
-        const datas = this.findInCache(key, value, subPropertyResponseList, subPropertyResponseOccurence);
-        if (datas) {
-            return Promise.resolve(datas);
-        }
-        this.getList<E, B>(method, httpRequestParams);
-        return this.findByKey(key, value, subPropertyResponseList, subPropertyResponseOccurence);
+    findByKeyOrRequestGetList<R, E = unknown, B = void>(key: string, value: string | number, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]): Promise<R> {
+        return this.findByKey<R>(key, value, subPropertyResponseList, subPropertyResponseOccurence).catch(() => {
+            this.getList<R, E, B>(method, httpRequestParams);
+            return this.findByKey(key, value, subPropertyResponseList, subPropertyResponseOccurence);
+        });
     }
 
     /**
      * Find an item by id key from cache
+     * 
+     * @template T Response type
      * @param key 
      * @param value 
      * @param method 
@@ -366,12 +384,16 @@ export default class RepositoryCache<T, O = unknown> {
      * @param subPropertyResponseOccurence an array of strings to get from the body of occurence type request response the nested sub property where the occurence is
      * @returns 
      */
-    find(id: string | number, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]) {
-        return this.findByKey(this.idKey, id, subPropertyResponseList, subPropertyResponseOccurence);
+    find<T>(id: string | number, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]): Promise<T> {
+        return this.findByKey<T>(this.idKey, id, subPropertyResponseList, subPropertyResponseOccurence);
     }
 
     /**
      * Find an item by id key from cache or request and cache it
+     * 
+     * @template R Response type
+     * @template E Exception body type
+     * @template B request body type
      * @param key 
      * @param value 
      * @param method 
@@ -380,8 +402,8 @@ export default class RepositoryCache<T, O = unknown> {
      * @param subPropertyResponseOccurence an array of strings to get from the body of occurence type request response the nested sub property where the occurence is
      * @returns 
      */
-    findOrRequest<E, B = void>(id: string | number, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]) {
-        return this.findByKeyOrRequest<E, B>(this.idKey, id, method, httpRequestParams, subPropertyResponseList, subPropertyResponseOccurence);
+    findOrRequest<R, E = unknown, B = void>(id: string | number, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]): Promise<R> {
+        return this.findByKeyOrRequest<R, E, B>(this.idKey, id, method, httpRequestParams, subPropertyResponseList, subPropertyResponseOccurence);
     }
 
     /**
@@ -394,17 +416,21 @@ export default class RepositoryCache<T, O = unknown> {
      * @param subPropertyResponseOccurence an array of strings to get from the body of occurence type request response the nested sub property where the occurence is
      * @returns 
      */
-    findOrRequestGetAll<E, B = void>(id: string | number, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]) {
-        return this.findByKeyOrRequestGetAll<E, B>(this.idKey, id, method, httpRequestParams, subPropertyResponseList, subPropertyResponseOccurence);
+    findOrRequestGetList<R, E = unknown, B = void>(id: string | number, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, subPropertyResponseList?: string[], subPropertyResponseOccurence?: string[]): Promise<R> {
+        return this.findByKeyOrRequestGetList<R, E, B>(this.idKey, id, method, httpRequestParams, subPropertyResponseList, subPropertyResponseOccurence);
     }
 
     /**
      * Request to create an item and clear lists cache
+     * 
+     * @template R Response type
+     * @template E Exception body type
+     * @template B request body type
      * @param method 
      * @param httpRequestParams 
      * @returns 
      */
-    create<R, E, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>) {
+    create<R, E = unknown, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>): Promise<R> {
         this.clearListsCache();
         return this.doHttpRequest<R, E, B>(method, httpRequestParams).then((response) => {
             return response;
@@ -413,13 +439,17 @@ export default class RepositoryCache<T, O = unknown> {
 
     /**
      * Request to update an item and clear lists cache and specific occurence cache
+     * 
+     * @template R Response type
+     * @template E Exception body type
+     * @template B request body type
      * @param id 
      * @param method 
      * @param httpRequestParams 
      * @param subPropertyResponseOccurence an array of strings to get from the body of occurence type request response the nested sub property where the occurence is
      * @returns 
      */
-    update<R, E, B = void>(id: string | number, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, subPropertyResponseOccurence: string[] = []) {
+    update<R, E = unknown, B = void>(id: string | number, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, subPropertyResponseOccurence: string[] = []): Promise<R> {
         this.clearOccurenceCache(id, subPropertyResponseOccurence);
         this.clearListsCache();
         return this.doHttpRequest<R, E, B>(method, httpRequestParams).then((response) => {
@@ -429,13 +459,17 @@ export default class RepositoryCache<T, O = unknown> {
 
     /**
      * Request to delete an item and clear lists cache and specific occurence cache
+     * 
+     * @template R Response type
+     * @template E Exception body type
+     * @template B request body type
      * @param id 
      * @param method 
      * @param httpRequestParams 
      * @param subPropertyResponseOccurence an array of strings to get from the body of occurence type request response the nested sub property where the occurence is
      * @returns 
      */
-    delete<R, E, B = void>(id: string | number, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, subPropertyResponseOccurence: string[] = []) {
+    delete<R, E = unknown, B = void>(id: string | number, method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, subPropertyResponseOccurence: string[] = []): Promise<R> {
         this.clearOccurenceCache(id, subPropertyResponseOccurence);
         this.clearListsCache();
         return this.doHttpRequest<R, E, B>(method, httpRequestParams).then((response) => {
@@ -446,6 +480,9 @@ export default class RepositoryCache<T, O = unknown> {
     /**
      * For specific requests that not need to be cached and clear cache if necessary
      * 
+     * @template R Response type
+     * @template E Exception body type
+     * @template B request body type
      * @param method 
      * @param httpRequestParams 
      * @param clearCache 
@@ -454,7 +491,7 @@ export default class RepositoryCache<T, O = unknown> {
      * @param occurenceId 
      * @returns 
      */
-    request<R, E, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, clearCache = false, clearListsCache = false, clearOccurenceCache = false, occurenceId?: string | number, subPropertyResponseOccurence: string[] = []) {
+    request<R, E = unknown, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, clearCache = false, clearListsCache = false, clearOccurenceCache = false, occurenceId?: string | number, subPropertyResponseOccurence: string[] = []): Promise<R> {
         if (clearCache) {
             this.clearCache();
         }
@@ -473,6 +510,9 @@ export default class RepositoryCache<T, O = unknown> {
     /**
      * For specific requests not match with getList, get, findByKey, create, update and delete methods that relying on cache and clear cache if necessary
      * 
+     * @template R Response type
+     * @template E Exception body type
+     * @template B request body type
      * @param method 
      * @param httpRequestParams 
      * @param clearCache 
@@ -481,7 +521,7 @@ export default class RepositoryCache<T, O = unknown> {
      * @param occurenceId 
      * @returns 
      */
-    requestCached<R extends T | T[], E, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, requestType: RequestType, clearCache = false, clearListsCache = false, clearOccurenceCache = false, occurenceId?: string | number, subPropertyResponseOccurence: string[] = []): Promise<R> {
+    requestCached<R, E = unknown, B = void>(method: HttpMethod, httpRequestParams: HttpRequestParams<B, O>, requestType: RequestType, clearCache = false, clearListsCache = false, clearOccurenceCache = false, occurenceId?: string | number, subPropertyResponseOccurence: string[] = []): Promise<R> {
         if (clearCache) {
             this.clearCache();
         }
