@@ -1,15 +1,15 @@
-import { StringsType } from "./StringsKeys";
+import { StringsType } from "./StringsKey";
 
 const en: StringsType = {
   french: "French",
   english: "English",
   hello: "Hello",
-  dashbord: "Dashbord",
+  dashboard: "Dashboard",
   other: "Other",
   failedGettingUserRole: "Failed getting user role",
   backToHome: "Back to home",
   pageNotFound: "Page not found",
-  WeCouldntFindThePageYouAreLookingFor: "We couldn't find the page you are looking for.",
+  WeCouldNotFindThePageYouAreLookingFor: "We couldn't find the page you are looking for.",
   internalServerError: "Internal server error",
   oopsSomethingWentWrong: "Oops, something went wrong",
   youAreNotAuthorized: "You are not authorized to access this page",
@@ -19,7 +19,7 @@ const en: StringsType = {
   password: "Password",
   rememberMe: "Remember me",
   credentials: "Credentials",
-  badCredentials: "Bad credentials",
+  badCredentials: "Authentication failed. Email or password is invalid.",
   emailOrPasswordInvalid: "Email or Password is invalid",
   forgotPassword: "Forgot password",
   login: "Login",
@@ -36,6 +36,18 @@ const en: StringsType = {
   unavailableServer: "Unavailable server",
   logoutFailed: "Logout failed",
   logout: "Logout",
+  externalResourceUnavailable: "External resource unavailable, please try again or try again later.",
+  unexpectedError: "Unexpected error, please try again or try again later.",
+  requiredField: "This field is required",
+  invalidEmail: "Invalid email",
+  invalidPassword: "Invalid password",
+  email: "Email",
+  failed: "Failed",
+  userAvatar: "User avatar",
+  operationFailed: "Operation failed",
+  FailedToLogoutUser: "Failed to logout user",
+  tryAgain: "Try again",
+  thisIsAnError: "This is an error",
 };
 
 export default en;

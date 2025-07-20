@@ -1,43 +1,52 @@
-import Permissions from "core/user/auth/entities/Permissions"
-import routesPaths from "core/routes/routesPaths"
-import { StringsKeys } from "core/internationalization/strings";
+import Permission from "core/authUser/auth/entities/Permission"
+import DashboardNavigationLocation from "core/navigation/DashboardNavigationLocation";
+import { StringsKey } from "core/internationalization/strings";
+import Colors from "core/colors/Colors";
+import PublicNavigationLocation from "core/navigation/PublicNavigationLocation";
 
 export type MenuSectionTitle = {
-    permission?: Permissions;
+    permission?: Permission;
     sectionTitle: string;
 }
 
 export type MenuOptionsGroup = {
-    permission?: Permissions;
+    permission?: Permission;
     icon?: string;
-    title: string;
+    title: StringsKey;
     badgeContent?: string;
+    badgeColor?: Colors;
     children: (MenuOptionsGroup | MenuOption)[];
-    badgeColor?: 'default' | 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info';
 }
 
 export type MenuOption = {
-    permission?: Permissions;
+    permission?: Permission;
     disabled?: boolean;
     icon?: string;
-    path?: string;
-    title: string;
+    location: PublicNavigationLocation | DashboardNavigationLocation;
+    title: StringsKey;
     badgeContent?: string;
+    badgeColor?: Colors;
     externalLink?: boolean;
     openInNewTab?: boolean;
-    badgeColor?: 'default' | 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info';
 }
 
-export type Menu = (MenuOption | MenuOptionsGroup | MenuSectionTitle)[]
+export type MenuItem = MenuOption | MenuOptionsGroup | MenuSectionTitle
+
+export type Menu = MenuItem[]
 
 const menu: Menu = [
     {
-        path: routesPaths.DASHBOARD.ROOT,
-        title: StringsKeys.dashbord
+        location: DashboardNavigationLocation.DASHBOARD,
+        title: StringsKey.dashboard
     },
     {
-        path: routesPaths.DASHBOARD.OTHER,
-        title: StringsKeys.other
+        title: StringsKey.email,
+        children: [
+            {
+                location: DashboardNavigationLocation.OTHER,
+                title: StringsKey.other,
+            }
+        ]
     }
 ];
 

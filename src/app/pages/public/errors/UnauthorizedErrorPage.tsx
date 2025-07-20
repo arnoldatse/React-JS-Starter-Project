@@ -1,9 +1,10 @@
 import { FC } from "react";
-import routesPaths from "core/routes/routesPaths";
-import { StringsKeys } from "core/internationalization/strings";
+import { StringsKey } from "core/internationalization/strings";
 import useLanguage from "app/shared/hooks/useLanguage";
 import MessageTemplate from "./components/MessageTemplate";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
+import mapPathService from "app/shared/services/mapPathService";
+import PublicNavigationLocation from "core/navigation/PublicNavigationLocation";
 
 const UnauthorizedErrorPage: FC = () => {
   const { translate } = useLanguage();
@@ -12,11 +13,11 @@ const UnauthorizedErrorPage: FC = () => {
     <>
       <MessageTemplate
         code={401}
-        title={`${translate(StringsKeys.youAreNotAuthorized)}! 🔐`}
-        desc={translate(StringsKeys.youDonTHavePermissionToAccessThisPage)}
+        title={`${translate(StringsKey.youAreNotAuthorized)}! 🔐`}
+        desc={translate(StringsKey.youDonTHavePermissionToAccessThisPage)}
       />
-      <Link to={`/${routesPaths.HOME}`}>
-        {translate(StringsKeys.backToHome)}
+      <Link to={mapPathService.mapToBrowserPath(PublicNavigationLocation.HOME)}>
+        {translate(StringsKey.backToHome)}
       </Link>
     </>
   );

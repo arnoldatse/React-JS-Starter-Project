@@ -1,15 +1,15 @@
-import { StringsType } from "./StringsKeys";
+import { StringsType } from "./StringsKey";
 
 const fr: StringsType = {
   french: "Français",
   english: "Anglais",
   hello: "Bonjour",
-  dashbord:"Tableau de Board",
+  dashboard:"Tableau de Board",
   other: "Autre",
   failedGettingUserRole: "Échec de la récupération du rôle de l'utilisateur",
   backToHome: "Retour à l'accueil",
   pageNotFound: "Page non trouvée",
-  WeCouldntFindThePageYouAreLookingFor: "Nous n'avons pas pu trouver la page que vous recherchez.",
+  WeCouldNotFindThePageYouAreLookingFor: "Nous n'avons pas pu trouver la page que vous recherchez.",
   internalServerError: "Erreur interne du serveur",
   oopsSomethingWentWrong: "Oups, quelque chose s'est mal passé",
   youAreNotAuthorized: "Vous n'êtes pas autorisé à accéder à cette page",
@@ -19,7 +19,7 @@ const fr: StringsType = {
   password: "Mot de passe",
   rememberMe: "Se souvenir de moi",
   credentials: "Informations d'identification",
-  badCredentials: "Mauvaises informations d'identification",
+  badCredentials: "Authentification échouée. Email ou mot de passe invalide.",
   emailOrPasswordInvalid: "Email ou mot de passe invalide",
   forgotPassword: "Mot de passe oublié",
   login: "Se connecter",
@@ -36,6 +36,18 @@ const fr: StringsType = {
   unavailableServer: "Serveur non disponible",
   logoutFailed: "Échec de la déconnexion",
   logout: "Déconnexion",
+  externalResourceUnavailable: "Ressource externe non disponible, veuillez réessayer ou réessayer plus tard.",
+  unexpectedError: "Erreur inattendue, veuillez réessayer ou réessayer plus tard.",
+  requiredField: "Ce champ est requis",
+  invalidEmail: "Email invalide",
+  invalidPassword: "Mot de passe invalide",
+  email: "Email",
+  failed: "Échoué",
+  userAvatar: "Avatar de l'utilisateur",
+  operationFailed: "Opération échouée",
+  FailedToLogoutUser: "Échec de la déconnexion de l'utilisateur",
+  tryAgain: "Réessayer",
+  thisIsAnError: "Ceci est une erreur",
 };
 
 export default fr;

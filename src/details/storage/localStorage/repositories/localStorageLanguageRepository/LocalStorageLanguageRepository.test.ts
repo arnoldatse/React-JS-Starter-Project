@@ -1,5 +1,5 @@
 import LocalStorageLanguageRepository from './LocalStorageLanguageRepository';
-import LocalStorageAdapter from '../../LocalStorageAdapter';
+import LocalStorageAdapter from '../../LocalStorage';
 import { languages } from 'core/internationalization/languages';
 import StorageKeys from 'core/storage/StorageKeys';
 

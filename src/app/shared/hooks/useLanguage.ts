@@ -1,35 +1,45 @@
-import { useState } from 'react';
-import languageRepository from 'app/repositories/languageRepository';
-import { Language, languages } from 'core/internationalization/languages';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { defaultLanguage, Language } from 'core/internationalization/languages'
+import { StringsKey } from 'core/internationalization/strings'
+import GetCurrentLanguageUseCase from 'core/internationalization/useCases/GetCurrentLanguageUseCase/GetCurrentLanguageUseCase'
+import SetCurrentLanguageUseCase from 'core/internationalization/useCases/SetCurrentLanguageUseCase/SetCurrentLanguageUseCase'
+import languageRepository from 'app/shared/repositories/languageRepository'
 
-let currentLanguage: Language;
-try{
-    currentLanguage = await languageRepository.getCurrentLanguage();
-}
-catch(error){
-    console.warn('No language found, setting default language');
-    currentLanguage = languages.en;
+enum InitHookStates {
+    NOT_INITIALIZED,
+    INITIALIZING,
+    INITIALIZED,
 }
 
 export type UseLanguageResponse = {
     currentLanguage: Language,
     updateLanguage: (language: Language) => void,
-    translate: (key: string) => string,
+    translate: (key: StringsKey) => string,
 }
 
 const useLanguage = (): UseLanguageResponse => {
-    const { i18n, t } = useTranslation();
-    const [language, setLanguage] = useState<Language>(currentLanguage);
+    const [currentLanguage, setCurrentLanguage] = useState<Language>(defaultLanguage);
+    const initHook = useRef(InitHookStates.NOT_INITIALIZED);
 
-    const updateLanguage = async (language: Language) => {
+    const { i18n, t } = useTranslation();
+
+    const updateLanguage = (language: Language) => {
         i18n.changeLanguage(language.code);
-        await languageRepository.setCurrentLanguage(language);
-        setLanguage(language);
+        new SetCurrentLanguageUseCase(languageRepository).execute(language).then(() => setCurrentLanguage(language));
     }
 
+    useEffect(() => {
+        if (initHook.current === InitHookStates.NOT_INITIALIZED) {
+            initHook.current = InitHookStates.INITIALIZING;
+            new GetCurrentLanguageUseCase(languageRepository).execute()
+                .then(setCurrentLanguage)
+                .finally(() => initHook.current = InitHookStates.INITIALIZED);
+        }
+    }, []);
+
     return {
-        currentLanguage: language,
+        currentLanguage,
         updateLanguage,
         translate: t,
     }

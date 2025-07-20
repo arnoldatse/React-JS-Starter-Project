@@ -1,9 +1,9 @@
 import NavCollapsedRepository from "core/theme/NavCollapsedRepository";
-import LocalStorageAdapter from "../../LocalStorageAdapter";
+import LocalStorageAdapter from "../../LocalStorage";
 import StorageKeys from "core/storage/StorageKeys";
 
 export default class LocalStorageNavCollapsedRepository implements NavCollapsedRepository{
-    private storageAdapter = new LocalStorageAdapter();
+    private readonly storageAdapter = new LocalStorageAdapter();
 
     getCurrentNavCollapsed(): Promise<boolean> {
         return new Promise((resolve, reject) => {

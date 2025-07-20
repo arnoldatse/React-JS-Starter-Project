@@ -1,14 +1,14 @@
-import DotEnvAdapter from './DotEnvAdapter';
+import DotEnv from './DotEnv';
 
-describe('DotEnvAdapter', () => {
-  let dotEnvAdapter: DotEnvAdapter;
+describe('DotEnv', () => {
+  let dotEnvAdapter: DotEnv;
 
   beforeAll(() => {
     process.env = {
         TEST_KEY: 'testValue',
         ANOTHER_KEY: 'anotherValue'
     };
-    dotEnvAdapter = new DotEnvAdapter();
+    dotEnvAdapter = new DotEnv();
   });
 
   afterAll(() => {

@@ -1,15 +1,15 @@
 import LanguageRepository from "core/internationalization/LanguageRepository";
 import { Language } from "core/internationalization/languages";
-import LocalStorageAdapter from "../../LocalStorageAdapter";
+import LocalStorage from "../../LocalStorage";
 import StorageKeys from "core/storage/StorageKeys";
 
 class LocalStorageLanguageRepository implements LanguageRepository {
-    private storageAdapter = new LocalStorageAdapter();
+    private readonly localStorage = new LocalStorage();
 
     getCurrentLanguage(): Promise<Language> {
         return new Promise((resolve, reject) => {
             try {
-                const language = this.storageAdapter.getItem(StorageKeys.LANGUAGE);
+                const language = this.localStorage.getItem(StorageKeys.LANGUAGE);
                 if (!language) {
                     throw new Error("No language found");
                 }
@@ -22,7 +22,7 @@ class LocalStorageLanguageRepository implements LanguageRepository {
     setCurrentLanguage(language: Language): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
-                this.storageAdapter.setItem(StorageKeys.LANGUAGE, JSON.stringify(language));
+                this.localStorage.setItem(StorageKeys.LANGUAGE, JSON.stringify(language));
                 resolve();
             } catch (error) {
                 reject(error);

@@ -1,9 +1,10 @@
 import { FC } from "react";
 import useLanguage from "app/shared/hooks/useLanguage";
-import routesPaths from "core/routes/routesPaths";
-import { StringsKeys } from "core/internationalization/strings";
+import { StringsKey } from "core/internationalization/strings";
 import MessageTemplate from "./components/MessageTemplate";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
+import mapPathService from "app/shared/services/mapPathService";
+import PublicNavigationLocation from "core/navigation/PublicNavigationLocation";
 
 const ServerErrorPage: FC = () => {
   const { translate } = useLanguage();
@@ -12,11 +13,11 @@ const ServerErrorPage: FC = () => {
     <>
       <MessageTemplate
         code={500}
-        title={`${translate(StringsKeys.internalServerError)} 👨🏻‍💻`}
-        desc={translate(StringsKeys.oopsSomethingWentWrong)}
+        title={`${translate(StringsKey.internalServerError)} 👨🏻‍💻`}
+        desc={translate(StringsKey.oopsSomethingWentWrong)}
       />
-      <Link to={`/${routesPaths.HOME}`}>
-        {translate(StringsKeys.backToHome)}
+      <Link to={mapPathService.mapToBrowserPath(PublicNavigationLocation.HOME)}>
+        {translate(StringsKey.backToHome)}
       </Link>
     </>
   );

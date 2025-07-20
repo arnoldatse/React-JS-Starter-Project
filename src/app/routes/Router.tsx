@@ -1,71 +1,150 @@
-import { FC } from "react";
-import SessionStorageService from "core/user/auth/services/sessionStorageService/SessionStorageService";
-import RouterManager, { RouterManagerRoute } from "core/routes/RouterManager";
+import { FC, lazy, useContext } from "react";
 import {
   createHashRouter,
   redirect,
   RouteObject,
   RouterProvider,
-} from "react-router-dom";
-import routesPaths from "core/routes/routesPaths";
-import authGuard from "core/user/auth/guards/authGuard/authGuard";
-import PublicLayout from "app/pages/public/layout/PublicLayout";
-import DashboardLayout from "app/pages/dashboard/layout/DashboardLayout";
-import getDashboardRoutes from "./dashboardRoutes";
-import getPublicRoutes from "./publicRoutes";
+} from "react-router";
+import browserPaths from "details/navigation/browser/browserPaths";
+import authGuard from "core/authUser/auth/guards/authGuard/authGuard";
+import PublicNavigationLocation from "core/navigation/PublicNavigationLocation";
+import MapBrowserPath from "details/navigation/browser/mappers/mapBrowserPath/MapBrowserPath";
+import DashboardNavigationLocation from "core/navigation/DashboardNavigationLocation";
+import guestGuard from "core/authUser/auth/guards/guestGuard/guestGuard";
+import SessionStorageService from "core/authUser/auth/services/sessionStorageService/SessionStorageService";
+import AppContext from "../shared/contexts/AppContext";
 
-type RouterComponent = FC<{
-  sessionStorageService: SessionStorageService;
-  publicRouterManager: RouterManager<RouterManagerRoute>;
-  publicErrorsRouterManager: RouterManager<RouterManagerRoute>;
-  dashboardRouterManager: RouterManager<RouterManagerRoute>;
-  dashboardErrorsRouterManager: RouterManager<RouterManagerRoute>;
-}>;
+const PublicLayout = lazy(() => import("app/pages/public/layout/PublicLayout"));
+const PublicErrorLayout = lazy(
+  () => import("app/pages/public/errors/layout/PublicErrorsLayout")
+);
+const DashboardLayout = lazy(
+  () => import("app/pages/dashboard/layout/DashboardLayout")
+);
+const DashboardErrorLayout = lazy(
+  () => import("app/pages/dashboard/errors/layout/DashboardErrorsLayout")
+);
 
-const Router: RouterComponent = ({
-  sessionStorageService,
-  publicRouterManager,
-  publicErrorsRouterManager,
-  dashboardRouterManager,
-  dashboardErrorsRouterManager,
-}) => {
-  //define react router routes
+//Public pages components
+const HomePage = lazy(
+  () => import("app/pages/public/pages/homePage/HomePage")
+);
+const LoginPage = lazy(
+  () => import("app/pages/public/pages/loginPage/LoginPage")
+);
+
+//Dashboard pages components
+const DashboardPage = lazy(
+  () => import("app/pages/dashboard/pages/dashboardPage/DashboardPage")
+);
+const CustomPage = lazy(
+  () => import("app/pages/dashboard/pages/otherPage/OtherPage")
+);
+
+const Router: FC = () => {
+  const sessionStorageService: SessionStorageService =
+    useContext(AppContext).sessionStorageService;
+
+  const mapPublicNavigationLocationToComponent = (
+    publicNavigationLocation: PublicNavigationLocation
+  ) => {
+    switch (publicNavigationLocation) {
+      case PublicNavigationLocation.HOME:
+        return <HomePage />;
+      case PublicNavigationLocation.LOGIN:
+        return <LoginPage />;
+    }
+  };
+
+  const mapDashboardNavigationLocationToComponent = (
+    dashboardNavigationLocation: DashboardNavigationLocation
+  ) => {
+    switch (dashboardNavigationLocation) {
+      case DashboardNavigationLocation.DASHBOARD:
+        return <DashboardPage />;
+      case DashboardNavigationLocation.OTHER:
+        return <CustomPage />;
+    }
+  };
+
+  const publicRoutes: RouteObject[] = Object.keys(PublicNavigationLocation)
+    .filter((key) => isNaN(Number(key)))
+    .map((key) => ({
+      path: MapBrowserPath.mapToBrowserPath(key as PublicNavigationLocation),
+      element: mapPublicNavigationLocationToComponent(
+        key as PublicNavigationLocation
+      ),
+      ...(key === PublicNavigationLocation.LOGIN && {
+        loader: () =>
+          guestGuard(sessionStorageService)
+            ? null
+            : redirect(`/${browserPaths.DASHBOARD.HOME}`),
+      }),
+    }));
+
+  const dashboardRoutes: RouteObject[] = Object.keys(
+    DashboardNavigationLocation
+  )
+    .filter((key) => isNaN(Number(key)))
+    .map((key) => ({
+      path: MapBrowserPath.mapToBrowserRelativePath(
+        key as DashboardNavigationLocation
+      ),
+      element: mapDashboardNavigationLocationToComponent(
+        key as DashboardNavigationLocation
+      ),
+    }));
+
   const routes: RouteObject[] = [
     {
-      path: routesPaths.ROOT,
+      path: browserPaths.HOME,
       element: <PublicLayout />,
-      children: getPublicRoutes(
-        publicRouterManager,
-        publicErrorsRouterManager,
-        sessionStorageService
-      ),
+      children: [
+        ...publicRoutes,
+        {
+          path: browserPaths.ERROR.ROOT_RELATIVE,
+          element: <PublicErrorLayout />,
+          children: [
+            {
+              path: browserPaths.ERROR.NOT_FOUND_RELATIVE,
+              element: <div>Not Found</div>,
+            },
+          ],
+        },
+      ],
     },
     {
-      path: routesPaths.DASHBOARD.ROOT,
-      loader: () => {
-        if (authGuard(sessionStorageService)) {
-          return null;
-        }
-        return redirect(`/${routesPaths.LOGIN}`);
-      },
+      path: browserPaths.DASHBOARD.ROOT,
       element: <DashboardLayout />,
-      children: getDashboardRoutes(
-        dashboardRouterManager,
-        dashboardErrorsRouterManager,
-        sessionStorageService
-      ),
+      loader: () =>
+        authGuard(sessionStorageService) ? null : redirect(browserPaths.HOME),
+      children: [
+        ...dashboardRoutes,
+        {
+          path: browserPaths.DASHBOARD.ERROR.ROOT_RELATIVE,
+          element: <DashboardErrorLayout />,
+          children: [
+            {
+              path: browserPaths.DASHBOARD.ERROR.NOT_FOUND_RELATIVE,
+              element: <div>Not Found</div>,
+            },
+          ],
+        },
+      ],
     },
+
+    //Note found redirect
     {
-      path: `${routesPaths.DASHBOARD.ROOT}/*`,
-      loader: () => redirect(`/${routesPaths.DASHBOARD.ERROR.NOT_FOUND}`),
-      element: <></>,
+      path: `${browserPaths.DASHBOARD.ROOT}/*`,
+      loader: () => redirect(`/${browserPaths.DASHBOARD.ERROR.NOT_FOUND}`),
     },
     {
       path: "*",
-      loader: () => redirect(`/${routesPaths.ERROR.NOT_FOUND}`),
-      element: <></>,
+      loader: () => redirect(`/${browserPaths.ERROR.NOT_FOUND}`),
     },
   ];
+
+  console.log('Router initialized with routes:', routes);
 
   const router = createHashRouter(routes);
 

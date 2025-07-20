@@ -1,18 +1,13 @@
-import AuthRepositoryBackend from "details/datas/backend/rest/repositories/AuthRepositoryBackend/AuthRepositoryBackend";
-import AuthRepository from "core/user/auth/repositories/AuthRepository";
-import SessionStorageService from "core/user/auth/services/sessionStorageService/SessionStorageService";
-import LogoutUsecase from "core/user/auth/usecases/LogoutUseCase/LogoutUseCase";
-import httpRequestService from "app/services/httpRequestService";
-import LocalStorageAuthDatasRepository from "details/storage/localStorage/repositories/localStorageAuthDatasRepository/LocalStorageAuthDatasRepository";
+import SessionStorageService from "core/authUser/auth/services/sessionStorageService/SessionStorageService";
+import LogoutUseCase from "core/authUser/auth/useCases/LogoutUseCase/LogoutUseCase";
 
 const useAuth = () => {
-    const sessionStorageService = SessionStorageService.getInstance(new LocalStorageAuthDatasRepository());
-    const authRepository: AuthRepository = new AuthRepositoryBackend(httpRequestService)
-    const logoutUsecase = new LogoutUsecase(authRepository, sessionStorageService);
+    const sessionStorageService = SessionStorageService.getInstance();
+    const logoutUseCase = new LogoutUseCase();
 
     return {
-        updateAuthDatas: sessionStorageService.save,
-        logout: logoutUsecase,
+        updateAuthData: sessionStorageService.save,
+        logoutUseCase,
         sessionStorageService
     }
 }

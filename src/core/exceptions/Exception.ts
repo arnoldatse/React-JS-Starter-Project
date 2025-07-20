@@ -1,7 +1,7 @@
-import DefaultExceptionTypes from "./DefaultExceptionTypes";
+import DefaultExceptionType from "./DefaultExceptionType";
 
 export default interface Exception<B = unknown, T = unknown> {
-    type: DefaultExceptionTypes | T;
+    type: DefaultExceptionType | T;
     body?: B;
     message?: string;
 }

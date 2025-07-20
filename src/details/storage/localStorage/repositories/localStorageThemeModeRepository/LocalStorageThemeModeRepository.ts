@@ -1,9 +1,9 @@
 import ThemeModeRepository from "core/theme/ThemeModeRepository";
-import LocalStorageAdapter from "../../LocalStorageAdapter";
+import LocalStorageAdapter from "../../LocalStorage";
 import StorageKeys from "core/storage/StorageKeys";
 
 export default class LocalStorageThemeModeRepository<T> implements ThemeModeRepository<T>{
-    private storageAdapter = new LocalStorageAdapter();
+    private readonly storageAdapter = new LocalStorageAdapter();
 
     getCurrentThemeMode(): Promise<T> {
         return new Promise((resolve, reject) => {

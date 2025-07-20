@@ -1,17 +1,18 @@
 import { FC } from "react";
-import routesPaths from "core/routes/routesPaths";
 import useLanguage from "app/shared/hooks/useLanguage";
-import { StringsKeys } from "core/internationalization/strings";
-import { Link } from "react-router-dom";
+import { StringsKey } from "core/internationalization/strings";
+import { Link } from "react-router";
 import MessageTemplate from "./components/MessageTemplate";
+import mapPathService from "app/shared/services/mapPathService";
+import PublicNavigationLocation from "core/navigation/PublicNavigationLocation";
 
 const NotFoundErrorPage: FC = () => {
   const { translate } = useLanguage();
   return (
     <>
-      <MessageTemplate code={404} title={translate(StringsKeys.WeCouldntFindThePageYouAreLookingFor)} />
-      <Link to={`/${routesPaths.DASHBOARD.HOME}`}>
-        {translate(StringsKeys.backToHome)}
+      <MessageTemplate code={404} title={translate(StringsKey.weCouldNotFindThePageYouAreLookingFor)} />
+      <Link to={mapPathService.mapToBrowserPath(PublicNavigationLocation.HOME)}>
+        {translate(StringsKey.backToHome)}
       </Link>
     </>
   );

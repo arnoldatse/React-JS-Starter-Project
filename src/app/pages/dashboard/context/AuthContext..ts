@@ -1,15 +1,15 @@
 import { createContext } from "react"
-import AuthDatas from "core/user/auth/entities/AuthDatas"
+import AuthData from "core/authUser/auth/entities/AuthData"
 
 type AuthContextType = {
-    authDatas: AuthDatas | null
-    updateAuthDatas: (authDatas: AuthDatas) => void
+    authData: AuthData | null
+    updateAuthData: (authDatas: AuthData) => void
     isAuthenticated: boolean
 }
 
 const defaultAuthContext: AuthContextType = {
-    authDatas: null,
-    updateAuthDatas: () => { },
+    authData: null,
+    updateAuthData: () => { },
     isAuthenticated: false
 }
 

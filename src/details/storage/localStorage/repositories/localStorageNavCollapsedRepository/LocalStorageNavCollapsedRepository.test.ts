@@ -1,5 +1,5 @@
 import LocalStorageNavCollapsedRepository from './LocalStorageNavCollapsedRepository';
-import LocalStorageAdapter from '../../LocalStorageAdapter';
+import LocalStorageAdapter from '../../LocalStorage';
 import StorageKeys from 'core/storage/StorageKeys';
 
 describe('LocalStorageNavCollapsedRepository', () => {

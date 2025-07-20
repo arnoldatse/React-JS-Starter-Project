@@ -6,6 +6,12 @@ const config: Config = {
     '^core(.*)$': '<rootDir>/src/core$1',
     '^details(.*)$': '<rootDir>/src/details$1',
   },
+  transform: {
+    "^.+\\.m?[tj]sx?$": "babel-jest",
+  },
+  transformIgnorePatterns: [
+    "/node_modules/(?!.*)"
+  ]
 };
 
 export default config;
